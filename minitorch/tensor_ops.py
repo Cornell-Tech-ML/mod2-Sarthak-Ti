@@ -261,9 +261,31 @@ def tensor_map(
         in_shape: Shape,
         in_strides: Strides,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        """My explanation of the logic
+        
+        so first of all, map will be given out, out_shape, out_strides, in_storage, in_shape, in_strides
 
+        first we make a out_index that is [0,0,0]. then we loop through, I'll stick to the 000 element for now.
+
+        we first do to index, so if i is 0, we use the shape to find that we are at element 0,0,0, so for the first part of the loop, out_index is unchanged.
+        Then we set in_index as [0,0,0] then use broadcasting, in this case the shape is the same so in_index is also set to [0,0,0].
+        Then we use index to position to find the element in storage based on the strides and the multidimensional index. For the first element that is still 0.
+        Then we apply our fn to in storage at that element in storage and assign it to the output
+
+        Next you repeat but go to element 1, find its index, find its position in storage and continue repeating until we get through all the outputs
+        """
+        assert len(in_shape) <= len(out_shape), "in_shape must be smaller than out_shape"
+        out_index = [0] * len(out_shape) #a list with 0 the same amount as out shape times, so that's [0,0,0] for a 3d tensor
+        for i in range(len(out)): #loop through storage, the output one
+            to_index(i, out_shape, out_index) #get the index for the output matrix which is the larger one, out_index is modified in place
+            in_index = [0] * len(in_shape) #first set to 0s again, could be smaller than out_index
+            broadcast_index(out_index, out_shape, in_shape, in_index) #broadcast the index to the smaller one
+            
+            in_position = index_to_position(in_index, in_strides) #now finds the position based on the strides and index
+            out_position = index_to_position(out_index, out_strides) #same for output
+            
+            out[out_position] = fn(in_storage[in_position]) #and now in the storage we apply it
+            
     return _map
 
 
@@ -306,8 +328,22 @@ def tensor_zip(
         b_shape: Shape,
         b_strides: Strides,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        #similar idea, the key difference is zip is with 2 tensors, so we need to get the index for both
+        #like before we don't need a separate broadcast vs non broadcast shape
+        out_index = [0] * len(out_shape)
+        # assert(shape_broadcast(a_shape, b_shape) == out_shape) #make sure they can be broadcasted, this is already ensured tho!
+        for i in range(len(out)):
+            to_index(i, out_shape, out_index)
+            a_index = [0] * len(a_shape)
+            broadcast_index(out_index, out_shape, a_shape, a_index) #outshape must be bigger than a and b as it is the broadcast of it
+            b_index = [0] * len(b_shape)
+            broadcast_index(out_index, out_shape, b_shape, b_index)
+            
+            a_position = index_to_position(a_index, a_strides)
+            b_position = index_to_position(b_index, b_strides)
+            out_position = index_to_position(out_index, out_strides)
+            
+            out[out_position] = fn(a_storage[a_position], b_storage[b_position])
 
     return _zip
 
@@ -337,8 +373,32 @@ def tensor_reduce(
         a_strides: Strides,
         reduce_dim: int,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        #same idea again, but here we reduce it as well, like summing along one dimension
+        #so if a is 3x3 and reduce_dim is 0 then out_shape is 1x3
+        #good news is no broadcasting here
+        
+        #also fn takes in 2 elements at a time for parallelism, and it's how hardware does it, that's why not pass in independent vectors
+        
+        #same starting
+        out_index = [0] * len(out_shape)
+        for i in range(len(out)): #loop through the output storage
+            to_index(i, out_shape, out_index) #get the index for output matrix, get multidimensional index
+            
+            a_index = list(out_index) #copy the index, we will modify it
+            # a_index.insert(reduce_dim, 0)  # This is needed for pytorch implementation, but for minitorch we provide the 1 in output dimension
+            a_position = index_to_position(a_index, a_strides) #finds the corresponding position in the input, but need to move along the row still
+            accumulator = a_storage[a_position] #this is where we start
+            
+            #this index now means for example summing across the removed dimension, which is reduce_dim
+            for j in range(1, a_shape[reduce_dim]): #loop through the removed dimension, but we already have the first value, need 2 points minimum, so skip the first element. else doesn't generalize between + and * which need 0 and 1 respectively
+                a_index[reduce_dim] = j #set it to the current value along how far we have moved in that dimension that's reduced
+                a_position = index_to_position(a_index, a_strides) #get the new position
+                accumulator = fn(accumulator, a_storage[a_position]) #combine it with the previous one!
+            
+            #and now we store it
+            out_position = index_to_position(out_index, out_strides) #just like we get the point for a, also get it for out
+            out[out_position] = accumulator #and now assign it based on accumulator
+                
 
     return _reduce
 

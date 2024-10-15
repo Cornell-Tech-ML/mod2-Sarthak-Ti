@@ -282,6 +282,106 @@ class Tensor:
 
         """
         return self._tensor.shape
+    
+    @property
+    def size(self) -> int:
+        """Returns
+        size of the tensor
+
+        """
+        return self._tensor.size
+    
+    @property
+    def dims(self) -> int:
+        """Returns
+        number of dimensions of the tensor
+
+        """
+        return self._tensor.dims
 
     # Functions
     # TODO: Implement for Task 2.3.
+    
+    def __lt__(self, other: TensorLike) -> Tensor:
+        return LT.apply(self, self._ensure_tensor(other))
+    
+    def __gt__(self, other: TensorLike) -> Tensor:
+        return LT.apply(self._ensure_tensor(other), self)
+    
+    def __add__(self, other: TensorLike) -> Tensor:
+        return Add.apply(self, self._ensure_tensor(other))
+    
+    def __sub__(self, other: TensorLike) -> Tensor:
+        return Add.apply(self, Neg.apply(self._ensure_tensor(other)))
+    
+    def __neg__(self) -> Tensor:
+        return Neg.apply(self)
+    
+    def __mul__(self, other: TensorLike) -> Tensor:
+        return Mul.apply(self, self._ensure_tensor(other))
+    
+    def __eq__(self, other: TensorLike) -> Tensor:
+        return EQ.apply(self, self._ensure_tensor(other))
+    
+    def __radd__(self, other: TensorLike) -> Tensor:
+        return Add.apply(self._ensure_tensor(other), self)
+    
+    def __rmul__(self, other: TensorLike) -> Tensor:
+        return Mul.apply(self._ensure_tensor(other), self)
+    
+    def all(self, dim: TensorLike = None) -> Tensor:
+        if dim is None:
+            return All.apply(self)
+        else:
+            return All.apply(self, self._ensure_tensor(dim))
+    
+    def log(self) -> Tensor:
+        return Log.apply(self)
+    
+    def exp(self) -> Tensor:
+        return Exp.apply(self)
+    
+    def sigmoid(self) -> Tensor:
+        return Sigmoid.apply(self)
+    
+    def relu(self) -> Tensor:
+        return ReLU.apply(self)
+    
+    def is_close(self, other: TensorLike) -> Tensor:
+        return IsClose.apply(self, self._ensure_tensor(other))
+
+    def sum(self, dim: TensorLike = None) -> Tensor:
+        if dim is None:
+            return Sum.apply(self)
+        else:
+            return Sum.apply(self, self._ensure_tensor(dim))
+    
+    def view(self, shape: UserShape) -> Tensor:
+        # print(shape)
+        # print(shape)
+        if isinstance(shape, list) or isinstance(shape, tuple):
+            shape = self.make(shape, (len(shape),) , backend=self.backend)
+            return View.apply(self, self._ensure_tensor(shape))
+        else:
+            return View.apply(self, self._ensure_tensor(shape))
+    
+    def permute(self, *axes: Union[int, Tensor]) -> 'Tensor':
+        """Permute the dimensions of the tensor.
+        
+        Args:
+            *axes: Variable length argument list of ints or Tensors 
+                   representing the new order of dimensions.
+        
+        Returns:
+            A new Tensor with permuted dimensions.
+            
+        """
+        #now we make axes into a list of tensors
+        tensor_axes = [self._ensure_tensor(ax) for ax in axes]
+        return Permute.apply(self, *tensor_axes)
+    
+    def mean(self, dim: Optional[int] = None) -> Tensor:
+        return self.sum(dim) / self.size
+    
+    def zero_grad_(self) -> None:
+        self.grad = None

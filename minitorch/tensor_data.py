@@ -44,8 +44,14 @@ def index_to_position(index: Index, strides: Strides) -> int:
         Position in storage
 
     """
-    # TODO: Implement for Task 2.1.
-    raise NotImplementedError("Need to implement for Task 2.1")
+    #so we are given strides and it is a np array essentially
+    #so we want to multiply elements and then sum them, which is np.dot
+    # idx = np.dot(index, strides)
+    #but do it with for loops
+    idx = 0
+    for i in range(len(index)):
+        idx += index[i] * strides[i]
+    return idx
 
 
 def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
@@ -60,9 +66,17 @@ def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
         out_index : return index corresponding to position.
 
     """
-    # TODO: Implement for Task 2.1.
-    raise NotImplementedError("Need to implement for Task 2.1")
-
+    #here we want to get the index given an ordinal
+    #easy option is to do a loop and keep dividing by the shape and taking the remainder
+    #the idea is we just use the shape, not the stride to find the index
+    #if we permute, it changes the shape, that's why don't need stride
+    
+    for i in range(len(shape)):
+        out_index[i] = ordinal % shape[i] #modify the out_index in place
+        ordinal = ordinal // shape[i]
+        
+    return None
+    
 
 def broadcast_index(
     big_index: Index, big_shape: Shape, shape: Shape, out_index: OutIndex
@@ -83,8 +97,31 @@ def broadcast_index(
         None
 
     """
+    #we can think of this as we broadcast the small tensor all over the big tensor
+    #then we want to find if we did the broadcasting what the element would be
+    #we could either just broadcast, or the smarter thing is just find the index, more efficient
+    
+    #first find the union shape
+    # bigshape = shape_broadcast(big_shape, shape)
+        
+    #and extend out_index to the big shape
+    # out_index = [0] * len(shape)
+    
+    #find how many padded 1s are there
+    # num_pad = len(bigshape) - len(shape)
+    
+    #now we loop through, start at the right so we can skip when we get to num_pad
+    for i in range(-1, -len(shape)-1, -1):
+        if big_shape[i] == 1: #this is actually bad because big shape is smaller in a dim so we never aaccess those elements!! But rarely the case for like zip, even not for map
+            #but there are arbitrary examples where it's true, and this doesn't make sense...
+            out_index[i] = 0
+        elif shape[i] == 1: #if the shape dimension is 1, then we also have index be 1, this is like it's padded
+            out_index[i] = 0
+        else:
+            out_index[i] = big_index[i] #if not 1, then just use the big index (assume it broadcasts)
+    
     # TODO: Implement for Task 2.2.
-    raise NotImplementedError("Need to implement for Task 2.2")
+    # raise NotImplementedError("Need to implement for Task 2.2")
 
 
 def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
@@ -102,7 +139,34 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
 
     """
     # TODO: Implement for Task 2.2.
-    raise NotImplementedError("Need to implement for Task 2.2")
+    # raise NotImplementedError("Need to implement for Task 2.2")
+
+    #so we have the 2 shapes, we need to broadcast them
+    '''rules
+    1. dimensions of size 1 broadcast to the other shape
+    2. if the dimensions are different, pad the smaller one with 1s on the left, padded with view
+    3. zip will add the starting dims of 1 (not in this function)'''
+    
+    #first check if the shapes are compatible
+    if len(shape1) > len(shape2):
+        shape1, shape2 = shape2, shape1 #better to have the smaller shape first
+    
+    #now we pad the smaller shape with 1s on the left using view
+    shape1 = (1,) * (len(shape2) - len(shape1)) + shape1
+    
+    #now simply loop through and if the shapes are different and not 1, raise an error
+    out_shape = []
+    for s1, s2 in zip(shape1, shape2):
+        if s1 == s2:
+            out_shape.append(s1)
+        elif s1 == 1:
+            out_shape.append(s2)
+        elif s2 == 1:
+            out_shape.append(s1)
+        else:
+            raise IndexingError(f"Shapes {shape1} and {shape2} are not compatible.")
+
+    return tuple(out_shape)
 
 
 def strides_from_shape(shape: UserShape) -> UserStrides:
@@ -231,8 +295,13 @@ class TensorData:
             range(len(self.shape))
         ), f"Must give a position to each dimension. Shape: {self.shape} Order: {order}"
 
+        #we simply permute by swaping the shape and strides
+        new_shape = tuple(self.shape[i] for i in order) #order is like 0,2,1 and goes through this
+        new_strides = tuple(self.strides[i] for i in order)
+        return TensorData(self._storage, new_shape, new_strides) #makes a new tensor with the new shape and strides
+
         # TODO: Implement for Task 2.1.
-        raise NotImplementedError("Need to implement for Task 2.1")
+        # raise NotImplementedError("Need to implement for Task 2.1")
 
     def to_string(self) -> str:
         """Convert to string"""
