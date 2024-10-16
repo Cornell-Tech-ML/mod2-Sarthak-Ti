@@ -361,15 +361,15 @@ def tensor_zip(
     ) -> None:
         # similar idea, the key difference is zip is with 2 tensors, so we need to get the index for both
         # like before we don't need a separate broadcast vs non broadcast shape
-        out_index = [0] * len(out_shape)
+        out_index = np.array([0] * len(out_shape), dtype=np.int32)
         # assert(shape_broadcast(a_shape, b_shape) == out_shape) #make sure they can be broadcasted, this is already ensured tho!
         for i in range(len(out)):
             to_index(i, out_shape, out_index)
-            a_index = [0] * len(a_shape)
+            a_index = np.array([0] * len(a_shape), dtype=np.int32)
             broadcast_index(
                 out_index, out_shape, a_shape, a_index
             )  # outshape must be bigger than a and b as it is the broadcast of it
-            b_index = [0] * len(b_shape)
+            b_index = np.array([0] * len(b_shape), dtype=np.int32)
             broadcast_index(out_index, out_shape, b_shape, b_index)
 
             a_position = index_to_position(a_index, a_strides)
@@ -415,7 +415,7 @@ def tensor_reduce(
         # also fn takes in 2 elements at a time for parallelism, and it's how hardware does it, that's why not pass in independent vectors
 
         # same starting
-        out_index = [0] * len(out_shape)
+        out_index = np.array([0] * len(out_shape), dtype=np.int32)
         for i in range(len(out)):  # loop through the output storage
             to_index(
                 i, out_shape, out_index

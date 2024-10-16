@@ -370,7 +370,7 @@ class Tensor:
         else:
             return Sum.apply(self, self._ensure_tensor(dim))
 
-    def view(self, *shape: UserShape) -> Tensor:
+    def view(self, *shape: int) -> Tensor:
         """Reshape the tensor to the given shape."""
         # print(shape)
         # print(shape)

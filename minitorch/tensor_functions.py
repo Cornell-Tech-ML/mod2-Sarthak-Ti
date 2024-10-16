@@ -271,8 +271,8 @@ class Permute(Function):
     def forward(ctx: Context, a: Tensor, *dims: Tensor) -> Tensor:
         """Permute tensor Forward"""
         ctx.save_for_backward(dims)
-        dims = [int(dim.item()) for dim in dims]
-        temptensor = a._tensor.permute(*dims)
+        dims2 = [int(dim.item()) for dim in dims]
+        temptensor = a._tensor.permute(*dims2)
         ts = minitorch.Tensor.make(
             temptensor._storage,
             temptensor.shape,
@@ -285,10 +285,10 @@ class Permute(Function):
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, ...]:
         """Permute tensor Backward"""
         (dims,) = ctx.saved_values
-        dims = [int(dim.item()) for dim in dims]
-        inv_dims = [0] * len(dims)
-        out_grad = [0] * len(dims)
-        for i, d in enumerate(dims):
+        dims2 = [int(dim.item()) for dim in dims]
+        inv_dims = [0] * len(dims2)
+        out_grad = [0] * len(dims2)
+        for i, d in enumerate(dims2):
             inv_dims[d] = i
         # print(dims,inv_dims)
         # now we want to do the reverse of permute
