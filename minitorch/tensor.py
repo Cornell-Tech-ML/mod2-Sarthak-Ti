@@ -336,7 +336,7 @@ class Tensor:
     def __rmul__(self, other: TensorLike) -> Tensor:
         return Mul.apply(self._ensure_tensor(other), self)
 
-    def all(self, dim: TensorLike = None) -> Tensor:
+    def all(self, dim: Optional[TensorLike] = None) -> Tensor:
         """Check if all elements are true."""
         if dim is None:
             return All.apply(self)
@@ -363,7 +363,7 @@ class Tensor:
         """Check if the tensor is close to another tensor."""
         return IsClose.apply(self, self._ensure_tensor(other))
 
-    def sum(self, dim: TensorLike = None) -> Tensor:
+    def sum(self, dim: Optional[TensorLike] = None) -> Tensor:
         """Sum the tensor elements along a given axis or all axes."""
         if dim is None:
             return Sum.apply(self)

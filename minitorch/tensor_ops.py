@@ -421,7 +421,9 @@ def tensor_reduce(
                 i, out_shape, out_index
             )  # get the index for output matrix, get multidimensional index
 
-            a_index = list(out_index)  # copy the index, we will modify it
+            a_index = np.array(
+                list(out_index), dtype=np.int32
+            )  # copy the index, we will modify it
             # a_index.insert(reduce_dim, 0)  # This is needed for pytorch implementation, but for minitorch we provide the 1 in output dimension
             a_position = index_to_position(
                 a_index, a_strides

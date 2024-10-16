@@ -165,8 +165,9 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
     if len(shape1) > len(shape2):
         shape1, shape2 = shape2, shape1  # better to have the smaller shape first
 
+    shape1tuple = tuple(shape1)
     # now we pad the smaller shape with 1s on the left using view
-    shape1 = (1,) * (len(shape2) - len(shape1)) + shape1
+    shape1 = (1,) * (len(shape2) - len(shape1)) + shape1tuple
 
     # now simply loop through and if the shapes are different and not 1, raise an error
     out_shape = []
