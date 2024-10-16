@@ -88,46 +88,47 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
         Non-constant Variables in topological order starting from the right.
 
     """
-    # Use DFS
-    sorted_nodes = []
-    visited = set()
-    # we start at the rightmost one and go backwards, let's keep track of the depth using a depth_history dict
-    depth_history = {}  # this doubles as keeping track of the nodes we have visited
+    # Use DFS in my implementation
+    # sorted_nodes = []
+    # visited = set()
+    # # we start at the rightmost one and go backwards, let's keep track of the depth using a depth_history dict
+    # depth_history = {}  # this doubles as keeping track of the nodes we have visited
 
-    def dfs(node: Variable, depth: int = 0) -> None:
-        if depth not in depth_history:
-            depth_history[depth] = []
-        if node.unique_id in visited or node.is_constant():
-            return
-        visited.add(node.unique_id)
-        depth_history[depth].append(node)
-
-        if not node.is_leaf():  # only if the node has a history so it's a parent node
-            for input_node in node.parents:
-                dfs(input_node, depth + 1)
-
-    dfs(variable)
-    # now go through the depth history and add the nodes in reverse order
-    for depth in sorted(depth_history.keys()):
-        sorted_nodes.extend(depth_history[depth])
-
-    return list(sorted_nodes)
-    
-    #their implementation, not needed
-    # order = []
-    # seen = set()
-    # def visit(var: Variable) -> None:
-    #     if var.unique_id in seen or var.is_constant():
+    # def dfs(node: Variable, depth: int = 0) -> None:
+    #     if depth not in depth_history:
+    #         depth_history[depth] = []
+    #     if node.unique_id in visited or node.is_constant():
     #         return
-    #     if not var.is_leaf():
-    #         for parent in var.parents:
-    #             if not parent.is_constant():
-    #                 visit(parent)
-    #     seen.add(var.unique_id)
-    #     order.insert(0, var)
-            
-    # visit(variable)
-    # return order
+    #     visited.add(node.unique_id)
+    #     depth_history[depth].append(node)
+
+    #     if not node.is_leaf():  # only if the node has a history so it's a parent node
+    #         for input_node in node.parents:
+    #             dfs(input_node, depth + 1)
+
+    # dfs(variable)
+    # # now go through the depth history and add the nodes in reverse order
+    # for depth in sorted(depth_history.keys()):
+    #     sorted_nodes.extend(depth_history[depth])
+
+    # return list(sorted_nodes)
+
+    # their implementation, not needed
+    order = []
+    seen = set()
+
+    def visit(var: Variable) -> None:
+        if var.unique_id in seen or var.is_constant():
+            return
+        if not var.is_leaf():
+            for parent in var.parents:
+                if not parent.is_constant():
+                    visit(parent)
+        seen.add(var.unique_id)
+        order.insert(0, var)
+
+    visit(variable)
+    return order
 
 
 def backpropagate(variable: Variable, deriv: Any) -> None:
@@ -144,7 +145,7 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
         None: Updates the derivative values of each leaf through accumulate_derivative`.
 
     """
-    #my implementation below, but has a minor bug
+    # my implementation below, but has a minor bug
     # sorted_nodes = topological_sort(variable)
 
     # # create dict of scalars and current derivatives
@@ -163,8 +164,8 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
     #         local_grad = derivatives[node.unique_id]
     #         for parent, derivative in node.chain_rule(local_grad):
     #             derivatives[parent.unique_id] += derivative
-    
-    #their implementation, works well
+
+    # their implementation, works well
     queue = topological_sort(variable)
     derivatives = {}
     derivatives[variable.unique_id] = deriv
@@ -173,7 +174,7 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
         if var.is_leaf():
             var.accumulate_derivative(deriv)
         else:
-            for v,d in var.chain_rule(deriv):
+            for v, d in var.chain_rule(deriv):
                 if v.is_constant():
                     continue
                 derivatives.setdefault(v.unique_id, 0)
