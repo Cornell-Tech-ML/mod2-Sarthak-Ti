@@ -291,7 +291,7 @@ def tensor_map(
             out_shape
         ), "in_shape must be smaller than out_shape"
         out_index = np.array(
-            [0] * len(in_shape), dtype=np.int32
+            [0] * len(out_shape), dtype=np.int32
         )  # a list with 0 the same amount as out shape times, so that's [0,0,0] for a 3d tensor
         for i in range(len(out)):  # loop through storage, the output one
             to_index(
