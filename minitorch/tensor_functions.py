@@ -282,7 +282,7 @@ class Permute(Function):
         return ts
 
     @staticmethod
-    def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, int, ...]:
+    def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, *tuple[int, ...]]:
         """Permute tensor Backward"""
         (dims,) = ctx.saved_values
         dims2 = [int(dim.item()) for dim in dims]
