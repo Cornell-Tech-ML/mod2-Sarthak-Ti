@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING, Callable, Optional, Type
 
 from typing_extensions import Protocol
 
+import numpy as np
+
 from . import operators
 from .tensor_data import (
     broadcast_index,
@@ -288,16 +290,18 @@ def tensor_map(
         assert len(in_shape) <= len(
             out_shape
         ), "in_shape must be smaller than out_shape"
-        out_index = (
-            [0] * len(out_shape)
+        out_index = np.array(
+            [0] * len(in_shape), dtype=np.int32
         )  # a list with 0 the same amount as out shape times, so that's [0,0,0] for a 3d tensor
         for i in range(len(out)):  # loop through storage, the output one
             to_index(
                 i, out_shape, out_index
             )  # get the index for the output matrix which is the larger one, out_index is modified in place
-            in_index = [0] * len(
-                in_shape
+
+            in_index = np.array(
+                [0] * len(in_shape), dtype=np.int32
             )  # first set to 0s again, could be smaller than out_index
+
             broadcast_index(
                 out_index, out_shape, in_shape, in_index
             )  # broadcast the index to the smaller one

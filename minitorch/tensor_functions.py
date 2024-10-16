@@ -14,7 +14,7 @@ from .autodiff import Context
 from .tensor_ops import SimpleBackend, TensorBackend
 
 if TYPE_CHECKING:
-    from typing import Any, List, Tuple
+    from typing import Any, List, Tuple, Optional, Union
 
     from .tensor import Tensor
     from .tensor_data import UserIndex, UserShape
@@ -106,7 +106,7 @@ class Add(Function):
 
 class All(Function):
     @staticmethod
-    def forward(ctx: Context, a: Tensor, dim: Tensor = None) -> Tensor:
+    def forward(ctx: Context, a: Tensor, dim: Optional[Tensor] = None) -> Tensor:
         """Return 1 if all are true"""
         if dim is not None:
             return a.f.mul_reduce(a, int(dim.item()))
@@ -206,7 +206,7 @@ class Exp(Function):
 
 class Sum(Function):
     @staticmethod
-    def forward(ctx: Context, a: Tensor, dim: Tensor = None) -> Tensor:
+    def forward(ctx: Context, a: Tensor, dim: Optional[Tensor] = None) -> Tensor:
         """Sum tensor Forward, specify dimension"""
         ctx.save_for_backward(dim)
         if dim is None:
@@ -216,7 +216,9 @@ class Sum(Function):
         return a.f.add_reduce(a, int(dim.item()))
 
     @staticmethod
-    def backward(ctx: Context, grad_output: Tensor) -> Tensor:
+    def backward(
+        ctx: Context, grad_output: Tensor
+    ) -> Union[Tensor, Tuple[Tensor, int]]:
         """Sum tensor Backward"""
         (dim,) = ctx.saved_values
         if dim is None:
@@ -235,7 +237,7 @@ class LT(Function):
         return a.f.lt_zip(a, b)
 
     @staticmethod
-    def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
+    def backward(ctx: Context, grad_output: Tensor) -> Tuple[int, int]:
         """Less than tensor Backward"""
         return 0, 0
 
@@ -247,7 +249,7 @@ class EQ(Function):
         return a.f.eq_zip(a, b)
 
     @staticmethod
-    def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
+    def backward(ctx: Context, grad_output: Tensor) -> Tuple[int, int]:
         """Equal tensor Backward"""
         return 0, 0
 
@@ -259,7 +261,7 @@ class IsClose(Function):
         return a.f.is_close_zip(a, b)
 
     @staticmethod
-    def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
+    def backward(ctx: Context, grad_output: Tensor) -> Tuple[int, int]:
         """IsClose tensor Backward"""
         return 0, 0
 
